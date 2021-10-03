@@ -1,0 +1,316 @@
+TME 2:
+
+1- Statistiques d'execution d'une commande Shell
+1.1 lancement de la commande time sleep 5:
+test 1:
+
+real	0m5,012s
+user	0m0,004s
+sys	0m0,000s
+
+test 2:
+
+real	0m5,156s
+user	0m0,004s
+sys	0m0,000s
+
+test 3:
+
+
+real	0m5,009s
+user	0m0,000s
+sys	0m0,000s
+
+Constatation:
+Sur les trois tests précédents on constate que la somme du temps calculée en mode user et du temps calculée en mode système n'est pas égale au temps total reel.
+
+Justification:
+Ceci est du au fait que les temps système et user sont calculés par échantillonnage, c'est à dire que la mise à jour de ces temps effectué si à chaque tic d'horloge, le processeur exécutait un code en mode système ou en mode user. ça reste des statistiques non précises qui engendrent des erreurs dans la précision du résultat.
+Etant donné qe nous avons une instruction sleep, le processeur courant est à l'état bloqué, donc il y a un temps système dans lequel le processus consulte l'heure et il y a 0 en temps user car le processus n'a pas de programme user, pendant le reste du temps dans les 5 secondes, d'autres processus prennent la main du processeur et s'exécutent
+
+1.2.
+test 1:
+real	0m6,940s
+user	0m6,936s
+sys	0m0,000s
+
+
+test 2:
+real	0m6,927s
+user	0m6,920s
+sys	0m0,000s
+
+
+test 3:
+real	0m6,919s
+user	0m6,916s
+sys	0m0,000s
+
+
+
+Constatation: même constatation, on a pas les valeurs exactes, notemment 0 pour sys
+Justification:
+l'échantillonnage a été effectué après que les exécutions systèmes soient terminés, donc elles n'ont pas été prises en compte, car à chaque fin de quantum, le processeur était déja passé en mode user.
+
+1.3
+test 1:
+real	0m9,944s
+user	0m4,468s
+sys	0m5,320s
+
+test 2:
+real	0m9,966s
+user	0m4,488s
+sys	0m5,300s
+
+
+test 3:
+real	0m9,780s
+user	0m4,356s
+sys	0m5,412s
+
+Constatation: la somme des deux temps ( user et système ) sont presque égaux au temps réel, il y a très peu de perte de temps, c'est à dire que l'échantillonage a été efficace
+
+3- Calcul du temps de réponse en utilisant gettimeofday
+
+affichage:
+temps écoulé: 5 
+temps écoulé: 10
+
+constatation: le temps total correspond bien à ce qu'on attend 
+
+4- Calcul de statistiques
+test 1: avec la commande: ./mytimes2 "ls -l" "./loopsys"
+total 92
+-rw-r--r--  1 3873337 3873337 2098 févr.  6 19:21 #compterendu.txt#
+-rw-r--r--  1 3873337 3873337 2021 févr.  6 15:51 compterendu.txt
+-rw-r--r--  1 3873337 3873337 1167 févr.  6 14:38 compterendu.txt~
+-rw-r--r--  1 3873337 3873337  594 févr.  6 19:18 lance_commande.c
+-rw-r--r--  1 3873337 3873337  606 févr.  6 15:51 lance_commande.c~
+-rw-r--r--+ 1 3873337 3873337  972 févr.  6 19:50 lance_commande_version2.c
+-rw-r--r--  1 3873337 3873337  936 févr.  6 19:44 lance_commande_version2.c~
+-rwxr-xr-x  1 3873337 3873337 8496 févr.  6 14:57 loopcpu
+-rw-r--r--  1 3873337 3873337  186 févr.  6 14:50 loopcpu.c
+-rw-r--r--  1 3873337 3873337  173 févr.  6 14:42 loopcpu.c~
+-rw-r--r--  1 3873337 3873337 1480 févr.  6 14:56 loopcpu.o
+-rwxr-xr-x  1 3873337 3873337 8640 févr.  6 15:05 loopsys
+-rw-r--r--  1 3873337 3873337  238 févr.  6 15:04 loopsys.c
+-rwxr-xr-x  1 3873337 3873337 8848 févr.  6 19:19 mytimes
+-rwxr-xr-x  1 3873337 3873337 8912 févr.  6 19:50 mytimes2
+
+Statistique de ls -l :
+Temps total : 0 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 0
+Temps systeme fils: 0
+Statistique de ./loopsys :
+Temps total : 8 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 371
+Temps systeme fils: 504
+
+
+test 2:
+
+total 92
+-rw-r--r--  1 3873337 3873337 2098 févr.  6 19:21 #compterendu.txt#
+-rw-r--r--  1 3873337 3873337 2021 févr.  6 15:51 compterendu.txt
+-rw-r--r--  1 3873337 3873337 1167 févr.  6 14:38 compterendu.txt~
+-rw-r--r--  1 3873337 3873337  594 févr.  6 19:18 lance_commande.c
+-rw-r--r--  1 3873337 3873337  606 févr.  6 15:51 lance_commande.c~
+-rw-r--r--+ 1 3873337 3873337  972 févr.  6 19:50 lance_commande_version2.c
+-rw-r--r--  1 3873337 3873337  936 févr.  6 19:44 lance_commande_version2.c~
+-rwxr-xr-x  1 3873337 3873337 8496 févr.  6 14:57 loopcpu
+-rw-r--r--  1 3873337 3873337  186 févr.  6 14:50 loopcpu.c
+-rw-r--r--  1 3873337 3873337  173 févr.  6 14:42 loopcpu.c~
+-rw-r--r--  1 3873337 3873337 1480 févr.  6 14:56 loopcpu.o
+-rwxr-xr-x  1 3873337 3873337 8640 févr.  6 15:05 loopsys
+-rw-r--r--  1 3873337 3873337  238 févr.  6 15:04 loopsys.c
+-rwxr-xr-x  1 3873337 3873337 8848 févr.  6 19:19 mytimes
+-rwxr-xr-x  1 3873337 3873337 8912 févr.  6 19:50 mytimes2
+Statistique de ls -l :
+Temps total : 0 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 0
+Temps systeme fils: 0
+Statistique de ./loopsys :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 394
+Temps systeme fils: 478
+
+commande ./mytimes2 "sleep 5" "./loopcpu" "./loopsys"
+
+test 1:
+
+Statistique de sleep 5 :
+Temps total : 5 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 0
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 889
+Temps systeme fils: 0
+fin 2
+Statistique de ./loopsys :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 1278
+Temps systeme fils: 485
+fin 3
+
+test 2:
+
+Statistique de sleep 5 :
+Temps total : 5 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 0
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 891
+Temps systeme fils: 0
+fin 2
+Statistique de ./loopsys :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 1280
+Temps systeme fils: 484
+fin 3
+
+
+test 3:
+
+Statistique de sleep 5 :
+Temps total : 5 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 0
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 888
+Temps systeme fils: 0
+fin 2
+Statistique de ./loopsys :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 1264
+Temps systeme fils: 494
+fin 3
+
+constatation: On constate que le temps est consommé par les processus fils 
+
+justification:
+
+5- Changement de priorite:
+5.1 La priorité de la commande ps -l est 80
+5.2 La priorité de la commande ps -l est 99 ( on a baissé la priorité de la commande avec nice, sachant que plus la valeur de la priorité est grande, moins le processus est prioritaire).
+
+5.3 
+
+Affichage du test:
+
+./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 ./loopcpu & ./mytimes2 "nice -19 ./loopcpu"
+[2] 11285
+[3] 11286
+[4] 11287
+[5] 11288
+[6] 11289
+[7] 11290
+[8] 11291
+[9] 11292
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 849
+Temps systeme fils: 0
+fin 1
+Statistique de ./loopcpu :
+Temps total : 9 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 846
+Temps systeme fils: 0
+fin 1
+Statistique de nice -19 ./loopcpu :
+Temps total : 15 
+Temps utilisateur : 0
+Temps systeme : 0
+Temps utilisateur fils : 675
+Temps systeme fils: 0
+fin 1
+[2]   Fini                    ./mytimes2 ./loopcpu
+[3]   Fini                    ./mytimes2 ./loopcpu
+[4]   Fini                    ./mytimes2 ./loopcpu
+[5]   Fini                    ./mytimes2 ./loopcpu
+[6]   Fini                    ./mytimes2 ./loopcpu
+[7]   Fini                    ./mytimes2 ./loopcpu
+[8]-  Fini                    ./mytimes2 ./loopcpu
+[9]+  Fini                    ./mytimes2 ./loopcpu
+
+
+Remarque: les affichages des 8 exécutions de ./loopcpu se font au même temps, puis il y a un temps d'attente avant l'affichage de l'execution de ./loopcpu dont la priorité a été baissée de 19, les 8 coeurs sont occupés pr les 8 exécutions et une fois terminé l'exécution de ./loopcpu avec -19 en priorité prend un des processeur après la libération 
+

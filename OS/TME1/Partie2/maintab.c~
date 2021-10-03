@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include "tab.h"
+
+int main(){
+
+  int *tab=(int *) malloc(NMAX * sizeof(int));
+  InitTab(tab, NMAX);
+  PrintTab(tab, NMAX);
+  
+}

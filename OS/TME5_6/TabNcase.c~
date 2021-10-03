@@ -1,0 +1,250 @@
+/* Diffusion tampon N case */
+/*Ressemble à producteur consommateur
+ */
+  #include <stdio.h> 
+  #include <unistd.h> 
+  #include <signal.h> 
+  #include <libipc.h>
+/*
+- Sémaphores nécessaires
+* tableau de semaphores d'accès aux cases en écriture ( une par case )
+* tableau de variables partagée pour compter le nombre de lecteurs par case et une sémaphore d'exlusion mutuelle pour la manipulation de chacune
+*  variables partagés id, et ir qui représentent les indices des casesà écrire/ lire et une sémaphore d'exclusion mutuelle pour chacune
+* un sémaphore pour bloquer les écritures en cas de tampon plein
+* un sémaphore pour bloquer les lectures en cas de tampon vide
+* tableau de sémaphore ( 1 pour chaque récepteur) afin de les réveiller lors de l'écriture dans une case
+
+- Variables nécessaires:
+
+ */
+/************************************************************/
+
+/* definition des parametres */ 
+
+  #define NE          2     /*  Nombre d'emetteurs         */ 
+  #define NR          5     /*  Nombre de recepteurs       */ 
+  #define NMAX        3     /*  Taille du tampon           */
+  
+/************************************************************/
+
+/* definition des semaphores */ 
+    #define MUTEXID     0     /* Exclusion mutuelle sur la variable partagée id*/
+    #define MUTEXIR     1     /* Exclusion mutuelle sur la variable partagée ir*/
+    int EMET[NMAX];        /* accès à une case du tampon*/ 
+    int RECEP[NMAX][NR];         /* un semaphore par recepteur réveillé après une écriture*/
+    int mutexNB[NMAX];     /* sémaphores d'exlusion mutuelle sur les variables partagés qui comptent le nombre de lectures */
+
+/************************************************************/
+
+/* definition de la memoire partagee */ 
+typedef struct {
+	int a;
+} t_segpart;
+
+t_segpart *nb_recepteurs[NMAX];
+t_segpart *id;
+t_segpart *ir;
+t_segpart * tampon[NMAX];
+/*
+je simule le tampon d'une case par une variable l'emetteur poserait la valeur du pid
+ */
+t_segpart *tampon[NMAX];
+
+/************************************************************/
+
+/* variables globales */ 
+    int emet_pid[NE], recep_pid[NR];
+
+
+
+/************************************************************/
+
+/* traitement de Ctrl-C */ 
+
+  void handle_sigint(int sig) 
+  { int i;
+  	for (i = 0; i < NE; i++) kill(emet_pid[i], SIGKILL); 
+	for (i = 0; i < NR; i++) kill(recep_pid[i], SIGKILL); 
+	det_sem(); 
+	det_shm((char *)id);
+	det_shm((char *)ir);
+	for(i=0; i<NMAX; i++) det_shm((char *)nb_recepteurs[i]);
+ 
+  } 
+
+/************************************************************/
+
+/* fonction EMETTEUR */ 
+
+	// A completer - contient les instructions executees
+        // par un emetteur
+void emettre(){
+  int i,j;
+  while(1){
+  P(MUTEXID);
+  P(EMET[id->a]);
+  i=id->a;
+  id->a=(id->a+1)%NMAX;
+  V(MUTEXID);
+  //traitement
+  tampon[i]->a=getpid();
+  printf("%d posé dans la case %d\n", getpid(), i);
+  for(j=0; j<NR; j++){
+    V(RECEP[i][j]);
+  }
+  }
+  
+}
+
+/************************************************************/
+
+/* fonction RECEPTEUR */ 
+
+	// A completer - contient les instructions executees
+        // par un recepteur
+void recevoir(int index){
+  int i;
+  while(1){
+  P(MUTEXIR);
+    i=ir->a;
+    printf("i= %d\n", i);
+    ir->a=(ir->a +1)%NMAX;
+    
+  V(MUTEXIR);
+  P(RECEP[i][index]);
+  printf("!\n");
+    P(mutexNB[i]);
+    printf("nb[%d]=%d\n",i, nb_recepteurs[i]->a);
+    nb_recepteurs[i]->a++;
+    if(nb_recepteurs[i]->a==NR){
+      V(mutexNB[i]);
+      nb_recepteurs[i]->a=0;
+      V(EMET[i]);
+      //traitement
+      printf(" %d récupéré par %d dans la case %d !!\n", tampon[i]->a, index, i);
+    }
+    else{
+      V(mutexNB[i]);
+      //traitement
+      printf(" %d récupéré par %d\n",tampon[i]->a, index);
+    }
+  }
+
+}
+/************************************************************/
+
+int main() { 
+    struct sigaction action;
+    /* autres variables (a completer) */
+    int i,j;
+    pid_t p;
+    setbuf(stdout, NULL);
+
+/* Creation du segment de memoire partagee */
+
+    for(i=0; i<NMAX; i++){
+      if((nb_recepteurs[i]=(t_segpart *)init_shm(sizeof(t_segpart)))==NULL){
+	perror("init_shm error");
+	exit(0);
+      }
+      nb_recepteurs[i]->a=0;
+      if((tampon[i]=(t_segpart *)init_shm(sizeof(t_segpart)))==NULL){
+	perror("init_shm error");
+	exit(0);
+      }
+      tampon[i]->a=-1;
+    }
+    if((id=(t_segpart *)init_shm(sizeof(t_segpart)))==NULL){
+	perror("init_shm error");
+	exit(0);
+    }
+    id->a=0;
+     if((ir=(t_segpart *)init_shm(sizeof(t_segpart)))==NULL){
+	perror("init_shm error");
+	exit(0);
+    }
+     ir->a=0;
+
+/* creation des semaphores */ 
+
+  
+    for(i=0; i<NMAX; i++){
+      EMET[i]=2+i;
+      mutexNB[i]=2+i+NMAX;
+    }
+
+    
+    for(i=0; i<NMAX; i++){
+      for(j=0; j<NR; j++){
+	RECEP[i][j]=2+NMAX+NMAX+i*NMAX+j;
+      }
+    }
+    if(creer_sem(2+NMAX+NMAX+NR*NMAX)==-1){
+      perror("creer_sem error");
+      exit(1);
+    }
+/* initialisation des semaphores */ 
+    init_un_sem(MUTEXIR, 1);
+    init_un_sem(MUTEXID, 1);
+    for(i=0; i<NMAX; i++){
+      init_un_sem(EMET[i], 1);
+      init_un_sem(mutexNB[i],1);
+    }
+    for(i=0; i<NMAX; i++){
+      for(j=0; j<NR; j++){
+	init_un_sem(RECEP[i][j],0);
+      }
+    }
+    
+/* creation des processus emetteurs */ 
+
+	// A completer - les pid des processus crees doivent
+        // etre stockes dans le tableau emet_pid
+    printf("pid des emetteurs\n");
+    for(i=0; i<NE; i++){
+      p=fork();
+      if( p<0){
+	perror("fork error!!");
+	exit(3);
+      }
+      if(p>0){
+	printf("emetteur %d\n", p);
+	emet_pid[i]=p;
+      }
+      if(p==0){
+	emettre();
+	exit(0);
+      }
+    }
+    
+
+/* creation des processus recepteurs */ 
+
+	// A completer - les pid des processus crees doivent
+        // etre stockes dans le tableau recep_pid
+     for(i=0; i<NR; i++){
+      p=fork();
+      if( p<0){
+	perror("fork error!!");
+	exit(3);
+      }
+      if(p>0){
+	recep_pid[i]=p;
+      }
+      if(p==0){
+	recevoir(i);
+	exit(0);
+      }
+    }
+    
+    
+/* redefinition du traitement de Ctrl-C pour arreter le programme */ 
+
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    action.sa_handler = handle_sigint;
+    sigaction(SIGINT, &action, 0); 
+
+    pause();                     /* attente du Ctrl-C */
+    return EXIT_SUCCESS;
+} 

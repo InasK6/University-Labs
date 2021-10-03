@@ -1,0 +1,42 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+
+//TME4
+//Partie 3
+/*
+Modification du fichier afin d'afficher les statistiques 
+ */
+int main(int argc , char ** argv){
+
+  
+  if(argc<3){
+    printf("few arguments, try <executable>  <string>  <files names>\n");
+  }
+  int NB_FILES= argc-2;
+
+  int i=0;
+  char * CHAINE=argv[1];
+  while (i<NB_FILES ){
+    if(fork()==0){
+      execlp("grep", "grep", CHAINE, argv[i+2], NULL);
+    }
+    i++;
+  }
+
+  int j=0;
+  for(j=0; j<NB_FILES; j++){
+    struct rusage r;
+    wait3(NULL,WNOHANG , &r);
+    
+  }
+  
+   printf("End\n");
+
+  return 0;
+  
+}

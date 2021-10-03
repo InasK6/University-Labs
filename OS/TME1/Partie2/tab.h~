@@ -1,0 +1,10 @@
+#define NMAX 10
+
+/*
+prototypes des fonctions
+ */
+
+void initTab(int *tab, int size);
+void PrintTab(int *tab, int size);
+int sumTab(int *tab, int size);
+int MinSumTab(int *min, int *tab, int size);

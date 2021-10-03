@@ -1,0 +1,6 @@
+FLAG= -Wall
+
+SYS_OBJS: 
+
+all:
+

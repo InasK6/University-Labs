@@ -1,0 +1,79 @@
+TME 2:
+
+1- Statistiques d'execution d'une commande Shell
+1.1 lancement de la commande time sleep 5:
+test 1:
+
+real	0m5,012s
+user	0m0,004s
+sys	0m0,000s
+
+test 2:
+
+real	0m5,156s
+user	0m0,004s
+sys	0m0,000s
+
+test 3:
+
+
+real	0m5,009s
+user	0m0,000s
+sys	0m0,000s
+
+Constatation:
+Sur les trois tests précédents on constate que la somme du temps calculée en mode user et du temps calculée en mode système n'est pas égale au temps total reel.
+
+Justification:
+Ceci est du au fait que les temps système et user sont calculés par échantillonnage, c'est à dire que la mise à jour de ces temps effectué si à chaque tic d'horloge, le processeur exécutait un code en mode système ou en mode user. ça reste des statistiques non précises qui engendrent des erreurs dans la précision du résultat.
+Etant donné qe nous avons une instruction sleep, le processeur courant est à l'état bloqué, donc il y a un temps système dans lequel le processus consulte l'heure et il y a 0 en temps user car le processus n'a pas de programme user, pendant le reste du temps dans les 5 secondes, d'autres processus prennent la main du processeur et s'exécutent
+
+1.2.
+test 1:
+real	0m6,940s
+user	0m6,936s
+sys	0m0,000s
+
+
+test 2:
+real	0m6,927s
+user	0m6,920s
+sys	0m0,000s
+
+
+test 3:
+real	0m6,919s
+user	0m6,916s
+sys	0m0,000s
+
+
+
+Constatation: même constatation, on a pas les valeurs exactes, notemment 0 pour sys
+Justification:
+l'échantillonnage a été effectué après que les exécutions systèmes soient terminés, donc elles n'ont pas été prises en compte, car à chaque fin de quantum, le processeur était déja passé en mode user.
+
+1.3
+test 1:
+real	0m9,944s
+user	0m4,468s
+sys	0m5,320s
+
+test 2:
+real	0m9,966s
+user	0m4,488s
+sys	0m5,300s
+
+
+test 3:
+real	0m9,780s
+user	0m4,356s
+sys	0m5,412s
+
+Constatation: la somme des deux temps ( user et système ) sont presque égaux au temps réel, il y a très peu de perte de temps, c'est à dire que l'échantillonage a été efficace
+
+3- Calcul du temps de réponse en utilisant gettimeofday
+
+
+
+
+

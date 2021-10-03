@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+ #include <sys/times.h>
+
+int main(){
+  //Attente de la saisie d'une commande sans argument
+  int taille=10;
+  char executable[taille];
+  char * separator=" ";
+   printf("Tapez votre commande\n");
+   if(fgets(executable, taille, stdin)==NULL){
+     perror("fgets!! Error \n");
+   }
+   int i=0;
+   while (executable[i]!='\n'){
+     i++;
+     printf(" %d\n", i);
+   }
+  //Lancement d'un processus fils executant la commande
+  pid_t p=fork();
+  if(p==-1){
+    perror("Fork Error\n");
+    
+  }
+  if( p==0){
+    char * strToken=strtok(executable, separators);
+    /*
+      comment remplir execlp puisqu'on ne connait pas le nombre d'arguments à l'avance ??
+     */
+    execlp(executable, executable, NULL);
+  }
+  /*
+    Pourquoi dire que le programme boucle indéfiniment, pourquoi ne pas fair eun fgets seulement qui est bloquant si on ne rentre pas de chaine de caractère, si c'est pour ignorer les chaînes de caractères qui n'ont rien à avoir, pourquoi a partir de la quatrième fois ou j'écris quit le programme ne s'arrête plus ?
+
+exemple:
+q
+q
+q
+quit
+
+alors qu'il s'arrête avec 
+q
+q
+quit 
+
+
+    pourquoi ne fait pas l'affichage du ls?
+    
+   */
+  char  mot[10];
+  if(executable[i-1] =='&'){
+    while(1){
+      if(strncmp( fgets(mot, 10, stdin),"quit",4)==0){
+	exit(0);
+      }
+    }
+  }
+  else{
+    wait(NULL);
+  }
+  return 0;
+}

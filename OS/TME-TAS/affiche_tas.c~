@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include "affiche_tas.h"
+#include <ctype.h>
+
+void afficher_tas(){
+    int i, j;
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 16; j++) { 
+	    printf("%4d", j + 16*i);
+        }
+        printf("\n");
+        for (j = 0; j < 16; j++) { 
+	    printf("%4d", tas[j + 16*i]);
+        }
+        printf("\n");
+        for (j = 0; j < 16; j++) { 
+	    if (isalnum(tas[j + 16*i])) {
+	        printf("%4c", tas[j + 16*i]);
+	    } else {
+		printf("    ");
+	    }
+        }
+        printf("\n\n");
+    }
+    printf("---------------------------------------------------------------\n\n");
+}
+
+void tas_init(){
+  libre = 0;
+  tas[0] = TAILTAS;
+  tas[1] = -1;
+}
+/*
+En résonnant, je déduis quand dans pred on devrait mettre l'adresse mémoire de la zone libre précédant celle alouée, car il sera utile lors de l'allocation de changer la valeur de sa prochaine zone libre 
+si aucune zone n'a été allouée, ou si notre zone allouée est la première zone libre on met dans pred je mets -1 aussi, on n'aura pas à faire de modification dans ce case de toute façon
+ */
+int first_fit(int taille, int *pred){
+  int p=libre;
+  *pred=-1;
+  while(tas[p]<taille){
+    *pred=p;
+    p=tas[p+1];
+    // si la taille est inférieure et qu'on est arrivé au dernier bloc 
+    if(p==-1){
+      *pred=-1;
+      return -1;
+    }
+
+  }
+  
+  return p;
+}
+
+char* tas_malloc(unsigned int taille){
+  int pred=-2;
+  int adr=first_fit(taille,&pred);
+  if(adr==-1){
+    printf("Allocation impossible, pas de place disponible\n");
+    return NULL;
+  }
+  int next=-1;
+  if( taille==tas[adr]){
+    next=tas[adr+1];
+  }
+  else{
+    next=adr+taille+1;
+    //on retire 1 car une case est automatiquement allouée pour stocker la taille mémoire
+    tas[next]=tas[adr]-taille-1;
+  }
+  //si l'adresse retournée correspond à la première case libre présente dans le tas
+  if(adr==libre){
+    libre=next;
+  }
+  //une case libre a été choisi au milieu 
+  else{
+    tas[pred+1]=next;
+  }
+
+  //*******************************************************************
+  //transformer en string si ce n'est pas fait automatiquement
+  return adr;
+}
+
+int tas_free(char *ptr){
+
+  
+}
+
+int main(){
+  char *p1, *p2, *p3, *p4, *p5;
+  p1=(char *) tas_malloc(10);
+  p2=(char *) tas_malloc(9);
+  p3=(char *) tas_malloc(5);
+
+  strcpy(p1, "tp 1");
+  strcpy(p2, "tp 2");
+  strcpy(p3, "tp 3");
+
+  tas_free(p2);
+  p4=(char *) tas_malloc(8);
+  strcpy(p4, "systeme");
+}

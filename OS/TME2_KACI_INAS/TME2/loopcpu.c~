@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <time.h>
+
+int main(){
+  int i=0;
+  int max=5000000000;
+  for (i=0; i<max ;i++){
+    
+  }
+    return 0; 
+}
